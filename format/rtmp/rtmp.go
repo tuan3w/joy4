@@ -8,16 +8,25 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/nareix/joy4/utils/bits/pio"
-	"github.com/nareix/joy4/av"
-	"github.com/nareix/joy4/av/avutil"
-	"github.com/nareix/joy4/format/flv"
-	"github.com/nareix/joy4/format/flv/flvio"
 	"io"
 	"net"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/tuan3w/joy4/av"
+	"github.com/tuan3w/joy4/av/avutil"
+	"github.com/tuan3w/joy4/format/flv"
+	"github.com/tuan3w/joy4/format/flv/flvio"
+	"github.com/tuan3w/joy4/utils/bits/pio"
+)
+
+const (
+	//MaxChunkSize rtmp chunksize
+	MaxChunkSize = 1024 * 1024 * 128
+
+	//WindowAckSize window ack size
+	WindowAckSize = 5000000
 )
 
 var Debug bool
@@ -353,11 +362,11 @@ var CodecTypes = flv.CodecTypes
 
 func (self *Conn) writeBasicConf() (err error) {
 	// > SetChunkSize
-	if err = self.writeSetChunkSize(1024 * 1024 * 128); err != nil {
+	if err = self.writeSetChunkSize(MaxChunkSize); err != nil {
 		return
 	}
 	// > WindowAckSize
-	if err = self.writeWindowAckSize(5000000); err != nil {
+	if err = self.writeWindowAckSize(WindowAckSize); err != nil {
 		return
 	}
 	// > SetPeerBandwidth

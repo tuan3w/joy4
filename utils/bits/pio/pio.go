@@ -1,5 +1,4 @@
-
 package pio
 
-var RecommendBufioSize = 1024*64
-
+//RecommendBufioSize size of internal buffer (8k)
+var RecommendBufioSize = 1024 * 8
