@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -198,6 +199,15 @@ type Conn struct {
 	avtag       flvio.Tag
 
 	eventtype uint16
+
+	// store error happened to connection
+	// will be useful for OnDone method
+	Error error
+
+	// flag indicates that livestream is complete
+	// normally without this flag is set, client can
+	// reconnect to broadcast livestream
+	Complete bool
 }
 
 type txrxcount struct {
@@ -300,16 +310,21 @@ func (self *Conn) ForceClose(errCode string, errMsg string) (err error) {
 	if errCode == "" {
 		errCode = "NetStream.Play.Stop"
 	}
-	if self.playing && self.writing {
-		self.writeCommandMsg(5, self.avmsgsid, "onStatus", self.commandtransid, nil, flvio.AMFMap{
-			"level":       "status",
-			"code":        errCode,
-			"description": errMsg,
-		})
-		self.flushWrite()
-	}
+	self.writeCommandMsg(3, self.avmsgsid, "onStatus", self.commandtransid, nil, flvio.AMFMap{
+		"level":       "error",
+		"code":        errCode,
+		"description": errMsg,
+	})
 
-	return self.netconn.Close()
+	self.Error = errors.New(errMsg)
+
+	self.flushWrite()
+
+	// if client not close after received message
+	// we will force to close it
+	time.AfterFunc(time.Second*5, func() {
+		self.netconn.Close()
+	})
 }
 
 func (self *Conn) pollCommand() (err error) {
