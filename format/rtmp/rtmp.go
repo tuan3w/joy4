@@ -27,6 +27,15 @@ const (
 
 	//WindowAckSize window ack size
 	WindowAckSize = 5000000
+
+	//ErrConnectRejected error connect rejected
+	ErrConnectRejected = "NetConnection.Connect.Rejected"
+
+	//ErrPublishBadname invalid app name
+	ErrPublishBadname = "NetStream.Publish.BadName"
+
+	//ErrConnectAppShutdown service temporary unavailable
+	ErrConnectAppShutdown = "NetConnection.Connect.AppShutdown"
 )
 
 var Debug bool
@@ -273,12 +282,15 @@ func (self *Conn) RxBytes() uint64 {
 	return self.txrxcount.rxbytes
 }
 
-func (self *Conn) Close() (err error) {
+func (self *Conn) Close(errCode string, errMsg string) (err error) {
+	if errCode == "" {
+		errCode = "NetStream.Play.Stop"
+	}
 	if self.playing && self.writing {
 		self.writeCommandMsg(5, self.avmsgsid, "onStatus", self.commandtransid, nil, flvio.AMFMap{
 			"level":       "status",
-			"code":        "NetStream.Play.Stop",
-			"description": "Stop live",
+			"code":        errCode,
+			"description": errMsg,
 		})
 		self.flushWrite()
 	}
