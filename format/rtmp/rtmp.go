@@ -325,6 +325,8 @@ func (self *Conn) ForceClose(errCode string, errMsg string) (err error) {
 	time.AfterFunc(time.Second*5, func() {
 		self.netconn.Close()
 	})
+
+	return nil
 }
 
 func (self *Conn) pollCommand() (err error) {
